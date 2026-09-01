@@ -39,6 +39,9 @@
                 <% if (w.bio) { %>
                     <p style="font-size:12px; color:#999; margin-top:8px;"><%= w.bio %></p>
                 <% } %>
+
+                <a href="/request/<%= w._id %>" class="btn primary-btn full-btn" style="margin-top:12px;display:block;text-align:center;">Send Request</a>
+
             </div>
         <% }) %>
     </div>

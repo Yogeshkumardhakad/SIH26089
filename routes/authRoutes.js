@@ -21,4 +21,5 @@ router.get('/dashboard', authController.getDashboard);
 router.get('/profile', authController.isAuthenticated, authController.getProfile);
 router.post('/profile', authController.isAuthenticated, upload.single('photo'), authController.updateProfile);
 
+
 module.exports = router;

@@ -14,6 +14,13 @@
 
         <div class="nav-buttons">
             <a href="/profile" class="btn secondary-btn">My Profile</a>
+
+            <% if (user.role === 'customer') { %>
+                <a href="/my-bookings" class="btn secondary-btn">My Bookings</a>
+            <% } else if (user.role === 'worker') { %>
+                <a href="/worker-requests" class="btn secondary-btn">Requests</a>
+            <% } %>
+
             <div class="user-info">
                 <span class="user-name">👤 <%= user.name %></span>
                 <span class="user-role"><%= user.role %></span>

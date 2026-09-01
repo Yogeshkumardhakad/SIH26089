@@ -32,6 +32,9 @@ app.use('/', authRoutes);
 const workerRoutes = require('./routes/workerRoutes');
 app.use('/', workerRoutes);
 
+const bookingRoutes = require('./routes/bookingRoutes');
+app.use('/', bookingRoutes);
+
 // Test route
 app.get('/', (req, res) => {
   res.render('home')
