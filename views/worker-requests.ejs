@@ -38,14 +38,14 @@
                         border-radius:10px;
                         font-size:12px;
                         font-weight:600;
-                        <%  if (b.status === 'pending') { %> background:#fff3cd;color:#856404; 
+                        <% if (b.status === 'pending') { %> background:#fff3cd;color:#856404;
                         <% } else if (b.status === 'accepted') { %> background:#d4edda;color:#155724;
                         <% } else if (b.status === 'rejected') { %> background:#f8d7da;color:#721c24;
+                        <% } else if (b.status === 'confirmed') { %> background:#e2d9f3;color:#5a3d8a;
                         <% } else if (b.status === 'paid') { %> background:#cce5ff;color:#004085;
+                        <% } else if (b.status === 'completed') { %> background:#d1f2eb;color:#0e6655;
                         <% } %>
-                    ">
-                        <%= b.status %>
-                    </span>
+                    "><%= b.status %></span>
                 </p>
 
                 <% if (b.status === 'pending') { %>
@@ -59,10 +59,25 @@
                     </div>
                 <% } %>
 
-                <% if (b.status === 'paid') { %>
-                    <p style="margin-top:12px;font-size:13px;background:#e8f5e9;padding:10px;border-radius:8px;">
-                        📍 <strong>Address:</strong> <%= b.address %>
-                    </p>
+                <% if (b.status === 'paid' || b.status === 'confirmed' || b.status === 'completed') { %>
+                    <div style="margin-top:12px;font-size:13px;background:#e8f5e9;padding:10px;border-radius:8px;">
+                        <p style="margin:0 0 6px;">📍 <strong>Address:</strong> <%= b.address %></p>
+                        <p style="margin:0 0 6px;">📞 <strong>Phone:</strong> <%= b.customer.phone %></p>
+                        <p style="margin:0;">
+                          💰 <strong>Payment:</strong>
+                          <% if (b.paymentMethod === 'cod') { %>
+                            Cash to collect (COD) <%= b.status === 'confirmed' ? '— pending' : '— done' %>
+                          <% } else { %>
+                            ✅ Paid Online
+                          <% } %>
+                        </p>
+                    </div>
+
+                    <% if (b.status === 'paid' || b.status === 'confirmed') { %>
+                        <form action="/mark-complete/<%= b._id %>" method="POST" style="margin-top:10px;">
+                            <button type="submit" class="btn primary-btn full-btn">✅ Mark Job Complete</button>
+                        </form>
+                    <% } %>
                 <% } %>
             </div>
         <% }) %>

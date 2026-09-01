@@ -11,7 +11,6 @@ exports.getPaymentPage = async (req, res) => {
       return res.redirect('/my-bookings');
     }
 
-    // Razorpay order banao (amount paise mein jaata hai, isliye x100)
     const order = await razorpay.orders.create({
       amount: booking.amount * 100,
       currency: 'INR',
@@ -33,7 +32,7 @@ exports.getPaymentPage = async (req, res) => {
 // POST Payment verify karna (Razorpay se response aane ke baad)
 exports.verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId, method } = req.body;
 
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -44,7 +43,7 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).send('Payment verification failed');
     }
 
-    await Booking.findByIdAndUpdate(bookingId, { status: 'paid' });
+    await Booking.findByIdAndUpdate(bookingId, { status: 'paid', paymentMethod: 'online' });
 
     res.redirect('/my-bookings');
 
@@ -53,3 +52,15 @@ exports.verifyPayment = async (req, res) => {
     res.redirect('/my-bookings');
   }
 };
+
+// POST COD confirm karna (koi verification nahi chahiye)
+exports.confirmCOD = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    await Booking.findByIdAndUpdate(bookingId, { status: 'confirmed', paymentMethod: 'cod' });
+    res.redirect('/my-bookings');
+  } catch (error) {
+    console.error(error);
+    res.redirect('/my-bookings');
+  }
+};;

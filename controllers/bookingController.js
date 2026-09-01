@@ -90,3 +90,36 @@ exports.rejectRequest = async (req, res) => {
     res.redirect('/worker-requests');
   }
 };
+
+// Worker: kaam complete mark karna
+exports.markComplete = async (req, res) => {
+  try {
+    await Booking.findByIdAndUpdate(req.params.bookingId, { status: 'completed' });
+    res.redirect('/worker-requests');
+  } catch (error) {
+    console.error(error);
+    res.redirect('/worker-requests');
+  }
+};
+
+// Customer: rating submit karna
+exports.submitRating = async (req, res) => {
+  try {
+    const { bookingId, rating, review } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking || booking.status !== 'completed') {
+      return res.redirect('/my-bookings');
+    }
+
+    booking.rating = rating;
+    booking.review = review;
+    await booking.save();
+
+    res.redirect('/my-bookings');
+
+  } catch (error) {
+    console.error(error);
+    res.redirect('/my-bookings');
+  }
+};

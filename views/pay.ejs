@@ -8,7 +8,12 @@
 
     <h1 style="color:#2e7d32;margin:20px 0;">₹<%= booking.amount %></h1>
 
-    <button id="payBtn" class="btn primary-btn full-btn">Pay Now</button>
+    <button id="payBtn" class="btn primary-btn full-btn" style="margin-bottom:12px;">Pay Online Now (UPI/Card)</button>
+
+    <form action="/confirm-cod" method="POST">
+      <input type="hidden" name="bookingId" value="<%= booking._id %>">
+      <button type="submit" class="btn secondary-btn full-btn">💵 Cash on Delivery</button>
+    </form>
   </div>
 </div>
 

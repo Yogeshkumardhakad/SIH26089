@@ -12,4 +12,7 @@ router.get('/worker-requests', authController.isAuthenticated, bookingController
 router.post('/accept/:bookingId', authController.isAuthenticated, bookingController.acceptRequest);
 router.post('/reject/:bookingId', authController.isAuthenticated, bookingController.rejectRequest);
 
+router.post('/mark-complete/:bookingId', authController.isAuthenticated, bookingController.markComplete);
+router.post('/submit-rating', authController.isAuthenticated, bookingController.submitRating);
+
 module.exports = router;
