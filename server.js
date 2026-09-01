@@ -35,6 +35,9 @@ app.use('/', workerRoutes);
 const bookingRoutes = require('./routes/bookingRoutes');
 app.use('/', bookingRoutes);
 
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/', paymentRoutes);
+
 // Test route
 app.get('/', (req, res) => {
   res.render('home')
