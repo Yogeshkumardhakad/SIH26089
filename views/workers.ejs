@@ -1,0 +1,47 @@
+<%- include('partials/header') %>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">Coop<span>Seva</span></div>
+        <nav id="navLinks">
+            <a href="/">Home</a>
+        </nav>
+    </div>
+</header>
+
+<section class="section">
+    <div class="center-title">
+        <small>SEARCH RESULTS</small>
+        <h2 style="text-transform:capitalize;"><%= skill %>s Near You</h2>
+        <p><%= workers.length %> verified worker(s) found</p>
+    </div>
+
+    <div class="workers-grid">
+        <% if (workers.length === 0) { %>
+            <p style="text-align:center; grid-column: 1/-1; color:#777;">
+                Abhi is service ke koi worker available nahi hain.
+            </p>
+        <% } %>
+
+        <% workers.forEach(w => { %>
+            <div class="worker-card">
+
+                <% if (w.photo) { %>
+                    <img src="<%= w.photo %>" alt="<%= w.name %>" class="worker-avatar" style="object-fit:cover;">
+                <% } else { %>
+                    <div class="worker-avatar"><%= w.name.charAt(0) %></div>
+                <% } %>
+
+                <h3><%= w.name %></h3>
+                <div class="worker-skill"><%= w.skill %> • <%= w.experience %> yrs exp</div>
+                <p style="color:#777; font-size:13px; margin:8px 0;"><%= w.location %></p>
+                <p style="color:#2e7d32; font-weight:700;">₹<%= w.hourlyRate %>/hr</p>
+                <% if (w.bio) { %>
+                    <p style="font-size:12px; color:#999; margin-top:8px;"><%= w.bio %></p>
+                <% } %>
+            </div>
+        <% }) %>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

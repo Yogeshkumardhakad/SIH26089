@@ -1,0 +1,144 @@
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+
+// Middleware: check karo login hai ya nahi
+exports.isAuthenticated = (req, res, next) => {
+  if (req.session.userId) {
+    next();
+  } else {
+    res.redirect('/signin');
+  }
+};
+
+// GET Signup page
+exports.getSignup = (req, res) => {
+  res.render('signup', { error: null });
+};
+
+// POST Signup (form submit)
+exports.postSignup = async (req, res) => {
+  try {
+    const { name, email, phone, role, password, skill, experience, location, hourlyRate, bio } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.render('signup', { error: 'Email already registered hai' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const userData = { name, email, phone, role, password: hashedPassword };
+
+    if (role === 'worker') {
+      userData.skill = skill;
+      userData.experience = experience;
+      userData.location = location;
+      userData.hourlyRate = hourlyRate;
+      userData.bio = bio;
+
+      if (req.file) {
+  userData.photo = req.file.path;
+}
+    }
+
+    await User.create(userData);
+
+    res.redirect('/signin');
+
+  } catch (error) {
+    console.error(error);
+    res.render('signup', { error: 'Kuch error aa gaya, dobara try karo' });
+  }
+};
+
+// GET Signin page
+exports.getSignin = (req, res) => {
+  res.render('signin', { error: null });
+};
+
+// POST Signin (form submit)
+exports.postSignin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.render('signin', { error: 'Email ya password galat hai' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.render('signin', { error: 'Email ya password galat hai' });
+    }
+
+    req.session.userId = user._id;
+    req.session.userName = user.name;
+
+    res.redirect('/dashboard');
+
+  } catch (error) {
+    console.error(error);
+    res.render('signin', { error: 'Kuch error aa gaya, dobara try karo' });
+  }
+};
+
+// Dashboard
+exports.getDashboard = async (req, res) => {
+  const user = await User.findById(req.session.userId);
+  res.render('dashboard', { user });
+};
+
+// Logout
+exports.logout = (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/signin');
+  });
+};
+
+// GET Profile page
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId);
+    res.render('profile', { user, error: null, success: null });
+  } catch (error) {
+    console.error(error);
+    res.redirect('/dashboard');
+  }
+};
+
+// POST Update Profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, skill, experience, location, hourlyRate, bio } = req.body;
+    const user = await User.findById(req.session.userId);
+
+    user.name = name;
+    user.phone = phone;
+
+    // Sirf worker hai to hi ye fields update karo
+    if (user.role === 'worker') {
+      user.skill = skill;
+      user.experience = experience;
+      user.location = location;
+      user.hourlyRate = hourlyRate;
+      user.bio = bio;
+    }
+
+    // Agar nayi photo upload hui hai
+    if (req.file) {
+  userData.photo = req.file.path;
+}
+
+    await user.save();
+
+    // Session mein naam bhi update kar do (navbar ke liye)
+    req.session.userName = user.name;
+
+    res.render('profile', { user, error: null, success: 'Profile update ho gaya!' });
+
+  } catch (error) {
+    console.error(error);
+    const user = await User.findById(req.session.userId);
+    res.render('profile', { user, error: 'Kuch error aa gaya', success: null });
+  }
+};
