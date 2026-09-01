@@ -13,7 +13,38 @@
     <div class="center-title">
         <small>SEARCH RESULTS</small>
         <h2 style="text-transform:capitalize;"><%= skill %>s Near You</h2>
-        <p><%= workers.length %> verified worker(s) found</p>
+        <p>
+          <%= workers.length %> verified worker(s) found
+          <% if (area) { %> near "<%= area %>"<% } %>
+          <% if (lat && lng && !area) { %> within <%= radius %>km<% } %>
+        </p>
+    </div>
+
+    <div class="search-box" style="margin-bottom:30px;">
+      <form method="GET" action="/workers/<%= skill %>" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+
+        <input type="hidden" name="lat" value="<%= lat || '' %>">
+        <input type="hidden" name="lng" value="<%= lng || '' %>">
+
+        <div class="input-box" style="flex:1;min-width:180px;">
+          <label>Search by area name</label>
+          <input type="text" name="area" value="<%= area || '' %>" placeholder="e.g. Andheri, Bandra">
+        </div>
+
+        <% if (lat && lng) { %>
+          <div class="input-box" style="min-width:140px;">
+            <label>Radius</label>
+            <select name="radius">
+              <option value="5" <%= radius == 5 ? 'selected' : '' %>>5 km</option>
+              <option value="10" <%= radius == 10 ? 'selected' : '' %>>10 km</option>
+              <option value="20" <%= radius == 20 ? 'selected' : '' %>>20 km</option>
+              <option value="50" <%= radius == 50 ? 'selected' : '' %>>50 km</option>
+            </select>
+          </div>
+        <% } %>
+
+        <button type="submit" class="btn primary-btn">Filter</button>
+      </form>
     </div>
 
     <div class="workers-grid">
@@ -34,7 +65,7 @@
 
                 <h3><%= w.name %></h3>
                 <div class="worker-skill"><%= w.skill %> • <%= w.experience %> yrs exp</div>
-                <p style="color:#777; font-size:13px; margin:8px 0;"><%= w.location %></p>
+                <p style="color:#777; font-size:13px; margin:8px 0;"><%= w.location?.address || '' %></p>
                 <p style="color:#2e7d32; font-weight:700;">₹<%= w.hourlyRate %>/hr</p>
                 <% if (w.bio) { %>
                     <p style="font-size:12px; color:#999; margin-top:8px;"><%= w.bio %></p>

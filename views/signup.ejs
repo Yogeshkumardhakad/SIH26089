@@ -33,7 +33,18 @@
         </select>
 
         <input type="number" name="experience" placeholder="Experience (in years)">
-        <input type="text" name="location" placeholder="Your location / area">
+      <label style="font-size:13px;color:#555;">Address</label>
+<input type="text" name="address" id="addressInput" placeholder="Address will appear here" required readonly style="background:#f4f4f4;">
+
+<label style="font-size:13px;color:#555;">Pincode</label>
+<input type="text" name="pincode" id="pincodeInput" placeholder="Pincode will appear here" required readonly style="background:#f4f4f4;">
+
+<input type="hidden" name="latitude" id="latitudeInput">
+<input type="hidden" name="longitude" id="longitudeInput">
+
+<button type="button" onclick="openMapModal('signup')" class="btn secondary-btn" style="width:100%;margin-bottom:14px;">
+  🗺️ Set Location on Map
+</button>
         <input type="number" name="hourlyRate" placeholder="Hourly rate (₹)">
         <input type="file" name="photo" accept="image/*">
         <textarea name="bio" placeholder="Short bio (optional)" rows="3" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:14px;"></textarea>

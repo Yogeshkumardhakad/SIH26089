@@ -29,7 +29,45 @@ function renderServices() {
 }
 
 function goToWorkers(skill) {
-  window.location.href = '/workers/' + skill;
+  const locationInput = document.getElementById('location');
+  const typedLocation = locationInput ? locationInput.value.trim() : '';
+
+  // Case 1: Customer ne kuch type kiya hai — usi location se search karo
+  if (typedLocation) {
+    showToast('Searching near ' + typedLocation + '...');
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(typedLocation)}&limit=1`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          const lat = data[0].lat;
+          const lng = data[0].lon;
+          window.location.href = `/workers/${skill}?lat=${lat}&lng=${lng}`;
+        } else {
+          showToast('Location not found, try a different name');
+        }
+      })
+      .catch(() => showToast('Could not search that location'));
+
+    return;
+  }
+
+  // Case 2: Kuch type nahi kiya — default current GPS location use karo
+  if (navigator.geolocation) {
+    showToast('Using your current location...');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        window.location.href = `/workers/${skill}?lat=${lat}&lng=${lng}`;
+      },
+      () => {
+        window.location.href = '/workers/' + skill;
+      }
+    );
+  } else {
+    window.location.href = '/workers/' + skill;
+  }
 }
 
 // ===== RENDER WORKERS =====
@@ -52,18 +90,16 @@ function toggleMenu() {
   nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
 }
 
-// ===== SEARCH =====
+// ===== SEARCH (home page search bar) =====
 function searchService() {
-  const location = document.getElementById('location').value;
   const service = document.getElementById('service').value;
-  const date = document.getElementById('date').value;
 
-  if (!location || !service) {
-    showToast('Location aur service select karo');
+  if (!service) {
+    showToast('Pehle service select karo');
     return;
   }
-  showToast(`Searching ${service} near ${location}...`);
-  document.getElementById('workers').scrollIntoView({ behavior: 'smooth' });
+
+  goToWorkers(service);
 }
 
 function showAllServices() {
@@ -82,19 +118,113 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// ===== MAP MODAL (Leaflet) =====
+let modalMap, modalMarker, currentMapTarget;
+
+function openMapModal(target) {
+  currentMapTarget = target; // 'signup' ya 'profile'
+  document.getElementById('mapModal').style.display = 'block';
+
+  if (!modalMap) {
+    const defaultLat = 19.0760;
+    const defaultLng = 72.8777;
+
+    modalMap = L.map('modalMap').setView([defaultLat, defaultLng], 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(modalMap);
+
+    modalMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(modalMap);
+
+    modalMarker.on('dragend', function () {
+      const pos = modalMarker.getLatLng();
+      previewLocation(pos.lat, pos.lng);
+    });
+
+    modalMap.on('click', function (e) {
+      modalMarker.setLatLng(e.latlng);
+      previewLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    const searchInput = document.getElementById('modalSearchInput');
+    let searchTimeout;
+    searchInput.addEventListener('input', function () {
+      clearTimeout(searchTimeout);
+      const query = searchInput.value;
+      if (query.length < 3) return;
+
+      searchTimeout = setTimeout(() => {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              const lat = parseFloat(data[0].lat);
+              const lng = parseFloat(data[0].lon);
+              modalMap.setView([lat, lng], 15);
+              modalMarker.setLatLng([lat, lng]);
+              previewLocation(lat, lng);
+            }
+          })
+          .catch(() => {});
+      }, 600);
+    });
+  }
+
+  setTimeout(() => modalMap.invalidateSize(), 200);
+}
+
+function closeMapModal() {
+  document.getElementById('mapModal').style.display = 'none';
+}
+
+function previewLocation(lat, lng) {
+  modalMarker.selectedLat = lat;
+  modalMarker.selectedLng = lng;
+
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+    .then(res => res.json())
+    .then(data => {
+      const preview = document.getElementById('modalAddressPreview');
+      if (data && data.display_name) {
+        preview.textContent = data.display_name;
+        modalMarker.selectedAddress = data.display_name;
+        modalMarker.selectedPincode = (data.address && data.address.postcode) ? data.address.postcode : '';
+      }
+    })
+    .catch(() => {});
+}
+
+function confirmMapLocation() {
+  if (!modalMarker.selectedLat) {
+    alert('Pehle map pe click karke ya search karke location select karo');
+    return;
+  }
+
+  document.getElementById('latitudeInput').value = modalMarker.selectedLat;
+  document.getElementById('longitudeInput').value = modalMarker.selectedLng;
+  document.getElementById('addressInput').value = modalMarker.selectedAddress || '';
+  document.getElementById('pincodeInput').value = modalMarker.selectedPincode || '';
+
+  closeMapModal();
+}
+
 // ===== INIT (sab kuch ek hi DOMContentLoaded mein) =====
 document.addEventListener('DOMContentLoaded', () => {
-  // Home page ke liye (agar in containers ka wujood hai to hi chalega)
   renderServices();
   renderWorkers();
 
-  // Signup page ke liye — role select hone par worker fields show/hide
   const roleSelect = document.getElementById('roleSelect');
   const workerFields = document.getElementById('workerFields');
-
   if (roleSelect && workerFields) {
     roleSelect.addEventListener('change', () => {
-      workerFields.style.display = roleSelect.value === 'worker' ? 'block' : 'none';
+      const isWorker = roleSelect.value === 'worker';
+      workerFields.style.display = isWorker ? 'block' : 'none';
+
+      const addressField = document.getElementById('addressInput');
+      if (addressField) {
+        addressField.required = isWorker;
+      }
     });
   }
 });

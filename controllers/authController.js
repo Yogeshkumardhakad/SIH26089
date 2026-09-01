@@ -18,7 +18,7 @@ exports.getSignup = (req, res) => {
 // POST Signup (form submit)
 exports.postSignup = async (req, res) => {
   try {
-    const { name, email, phone, role, password, skill, experience, location, hourlyRate, bio } = req.body;
+    const { name, email, phone, role, password, skill, experience, address, latitude, longitude, hourlyRate, bio } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -30,16 +30,21 @@ exports.postSignup = async (req, res) => {
     const userData = { name, email, phone, role, password: hashedPassword };
 
     if (role === 'worker') {
-      userData.skill = skill;
-      userData.experience = experience;
-      userData.location = location;
-      userData.hourlyRate = hourlyRate;
-      userData.bio = bio;
+  userData.skill = skill;
+  userData.experience = experience;
+  userData.hourlyRate = hourlyRate;
+  userData.bio = bio;
 
-      if (req.file) {
-  userData.photo = req.file.path;
+  userData.location = {
+    type: 'Point',
+    coordinates: [parseFloat(longitude) || 0, parseFloat(latitude) || 0],
+    address: address
+  };
+
+  if (req.file) {
+    userData.photo = req.file.path;
+  }
 }
-    }
 
     await User.create(userData);
 
@@ -109,20 +114,27 @@ exports.getProfile = async (req, res) => {
 // POST Update Profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, skill, experience, location, hourlyRate, bio } = req.body;
+    const { name, phone, skill, experience, address, latitude, longitude, hourlyRate, bio } = req.body;
     const user = await User.findById(req.session.userId);
 
     user.name = name;
     user.phone = phone;
 
     // Sirf worker hai to hi ye fields update karo
-    if (user.role === 'worker') {
-      user.skill = skill;
-      user.experience = experience;
-      user.location = location;
-      user.hourlyRate = hourlyRate;
-      user.bio = bio;
-    }
+   if (user.role === 'worker') {
+  user.skill = skill;
+  user.experience = experience;
+  user.hourlyRate = hourlyRate;
+  user.bio = bio;
+
+  if (latitude && longitude) {
+    user.location = {
+      type: 'Point',
+      coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      address: address
+    };
+  }
+}
 
     // Agar nayi photo upload hui hai
     if (req.file) {

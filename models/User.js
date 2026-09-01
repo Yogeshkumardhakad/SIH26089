@@ -22,9 +22,19 @@ const userSchema = new mongoose.Schema({
   default: null
 },
   location: {
+  type: {
     type: String,
-    required: function () { return this.role === 'worker'; }
+    enum: ['Point'],
+    default: 'Point'
   },
+  coordinates: {
+    type: [Number], // [longitude, latitude]
+    default: [0, 0]
+  },
+  address: {
+    type: String // Human-readable address, jaise "Andheri, Mumbai"
+  }
+},
   hourlyRate: {
     type: Number,
     required: function () { return this.role === 'worker'; }
@@ -34,5 +44,7 @@ const userSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
+
+userSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('User', userSchema);

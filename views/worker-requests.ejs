@@ -38,12 +38,14 @@
                         border-radius:10px;
                         font-size:12px;
                         font-weight:600;
-                        <% if (b.status === 'pending') { %> background:#fff3cd;color:#856404;
+                        <%  if (b.status === 'pending') { %> background:#fff3cd;color:#856404; 
                         <% } else if (b.status === 'accepted') { %> background:#d4edda;color:#155724;
                         <% } else if (b.status === 'rejected') { %> background:#f8d7da;color:#721c24;
                         <% } else if (b.status === 'paid') { %> background:#cce5ff;color:#004085;
                         <% } %>
-                    "><%= b.status %></span>
+                    ">
+                        <%= b.status %>
+                    </span>
                 </p>
 
                 <% if (b.status === 'pending') { %>
