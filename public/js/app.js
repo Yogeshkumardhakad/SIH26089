@@ -28,38 +28,21 @@ function renderServices() {
   `).join('');
 }
 
+// Service card click — agar search box se location already set hai to wahi use karo, warna GPS
 function goToWorkers(skill) {
-  const locationInput = document.getElementById('location');
-  const typedLocation = locationInput ? locationInput.value.trim() : '';
+  const lat = document.getElementById('searchLatInput')?.value;
+  const lng = document.getElementById('searchLngInput')?.value;
 
-  // Case 1: Customer ne kuch type kiya hai — usi location se search karo
-  if (typedLocation) {
-    showToast('Searching near ' + typedLocation + '...');
-
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(typedLocation)}&limit=1`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          const lat = data[0].lat;
-          const lng = data[0].lon;
-          window.location.href = `/workers/${skill}?lat=${lat}&lng=${lng}`;
-        } else {
-          showToast('Location not found, try a different name');
-        }
-      })
-      .catch(() => showToast('Could not search that location'));
-
+  if (lat && lng) {
+    window.location.href = `/workers/${skill}?lat=${lat}&lng=${lng}&radius=50`;
     return;
   }
 
-  // Case 2: Kuch type nahi kiya — default current GPS location use karo
   if (navigator.geolocation) {
     showToast('Using your current location...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        window.location.href = `/workers/${skill}?lat=${lat}&lng=${lng}`;
+        window.location.href = `/workers/${skill}?lat=${position.coords.latitude}&lng=${position.coords.longitude}&radius=50`;
       },
       () => {
         window.location.href = '/workers/' + skill;
@@ -70,7 +53,7 @@ function goToWorkers(skill) {
   }
 }
 
-// ===== RENDER WORKERS =====
+// ===== RENDER WORKERS (home page preview) =====
 function renderWorkers() {
   const container = document.getElementById('workersContainer');
   if (!container) return;
@@ -90,7 +73,7 @@ function toggleMenu() {
   nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
 }
 
-// ===== SEARCH (home page search bar) =====
+// ===== SEARCH BAR "Search" button =====
 function searchService() {
   const service = document.getElementById('service').value;
 
@@ -118,21 +101,28 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ===== MAP MODAL (Leaflet) =====
+// ===== MAP MODAL (Leaflet) — generalized for signup/profile/search =====
 let modalMap, modalMarker, currentMapTarget;
 
+const mapTargets = {
+  signup:  { latId: 'latitudeInput', lngId: 'longitudeInput', addressId: 'addressInput', pincodeId: 'pincodeInput' },
+  profile: { latId: 'latitudeInput', lngId: 'longitudeInput', addressId: 'addressInput', pincodeId: 'pincodeInput' },
+  search:  { latId: 'searchLatInput', lngId: 'searchLngInput', addressId: 'searchLocationDisplay', pincodeId: null }
+};
+
 function openMapModal(target) {
-  currentMapTarget = target; // 'signup' ya 'profile'
+  currentMapTarget = target;
   document.getElementById('mapModal').style.display = 'block';
 
   if (!modalMap) {
-    const defaultLat = 19.0760;
-    const defaultLng = 72.8777;
+    const defaultLat = 25.5941; // Patna, default center — chaho to apne shehar ke hisaab se badal do
+    const defaultLng = 85.1376;
 
-    modalMap = L.map('modalMap').setView([defaultLat, defaultLng], 11);
+    modalMap = L.map('modalMap').setView([defaultLat, defaultLng], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
     }).addTo(modalMap);
 
     modalMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(modalMap);
@@ -164,6 +154,8 @@ function openMapModal(target) {
               modalMap.setView([lat, lng], 15);
               modalMarker.setLatLng([lat, lng]);
               previewLocation(lat, lng);
+            } else {
+              showToast('Location not found');
             }
           })
           .catch(() => {});
@@ -171,7 +163,27 @@ function openMapModal(target) {
     });
   }
 
-  setTimeout(() => modalMap.invalidateSize(), 200);
+  // Map ka size sahi calculate ho, isliye multiple baar invalidate karo (Leaflet ka common fix)
+  setTimeout(() => modalMap.invalidateSize(), 150);
+  setTimeout(() => modalMap.invalidateSize(), 400);
+}
+
+function useMyLocationInModal() {
+  if (!navigator.geolocation) {
+    showToast('Geolocation supported nahi hai');
+    return;
+  }
+  showToast('Detecting current location...');
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      modalMap.setView([lat, lng], 15);
+      modalMarker.setLatLng([lat, lng]);
+      previewLocation(lat, lng);
+    },
+    () => showToast('Location access denied')
+  );
 }
 
 function closeMapModal() {
@@ -201,15 +213,22 @@ function confirmMapLocation() {
     return;
   }
 
-  document.getElementById('latitudeInput').value = modalMarker.selectedLat;
-  document.getElementById('longitudeInput').value = modalMarker.selectedLng;
-  document.getElementById('addressInput').value = modalMarker.selectedAddress || '';
-  document.getElementById('pincodeInput').value = modalMarker.selectedPincode || '';
+  const target = mapTargets[currentMapTarget];
+  if (!target) return;
+
+  document.getElementById(target.latId).value = modalMarker.selectedLat;
+  document.getElementById(target.lngId).value = modalMarker.selectedLng;
+  document.getElementById(target.addressId).value = modalMarker.selectedAddress || '';
+
+  if (target.pincodeId) {
+    const pincodeField = document.getElementById(target.pincodeId);
+    if (pincodeField) pincodeField.value = modalMarker.selectedPincode || '';
+  }
 
   closeMapModal();
 }
 
-// ===== INIT (sab kuch ek hi DOMContentLoaded mein) =====
+// ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   renderServices();
   renderWorkers();
@@ -222,9 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       workerFields.style.display = isWorker ? 'block' : 'none';
 
       const addressField = document.getElementById('addressInput');
-      if (addressField) {
-        addressField.required = isWorker;
-      }
+      if (addressField) addressField.required = isWorker;
     });
   }
 });

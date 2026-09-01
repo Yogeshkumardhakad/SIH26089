@@ -7,7 +7,7 @@ exports.getWorkersBySkill = async (req, res) => {
     const { lat, lng, radius, area } = req.query;
 
     let workers;
-    const searchRadius = radius ? parseInt(radius) : 20; // default 20km
+    const searchRadius = radius ? parseInt(radius) : 50; // default 20km
 
     if (area && area.trim() !== '') {
       // Area naam se text search (case-insensitive)

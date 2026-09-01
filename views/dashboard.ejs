@@ -72,9 +72,11 @@
 
         <div class="search-form">
             <div class="input-box">
-                <label>Location</label>
-                <input id="location" type="text" placeholder="Enter your location">
-            </div>
+    <label>Location</label>
+    <input id="searchLocationDisplay" type="text" placeholder="Tap to set on map" readonly style="background:#f9f9f9;cursor:pointer;" onclick="openMapModal('search')">
+    <input type="hidden" id="searchLatInput">
+    <input type="hidden" id="searchLngInput">
+</div>
             <div class="input-box">
                 <label>Service</label>
                 <select id="service">
