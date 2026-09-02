@@ -16,11 +16,12 @@
             <a href="/profile" class="btn secondary-btn">My Profile</a>
 
             <% if (user.role === 'customer') { %>
-                <a href="/my-bookings" class="btn secondary-btn">My Bookings</a>
+            <a href="/my-bookings" class="btn secondary-btn">My Bookings</a>
             <% } else if (user.role === 'worker') { %>
-                <a href="/worker-requests" class="btn secondary-btn">Requests</a>
-                <a href="/subscription" class="btn secondary-btn">Subscription</a>
-            <% } %>
+            <a href="/kyc" class="btn secondary-btn">KYC</a>
+            <a href="/worker-requests" class="btn secondary-btn">Requests</a>
+           <a href="/subscription" class="btn secondary-btn">Subscription</a>
+           <% } %>
 
             <div class="user-info">
                 <span class="user-name">👤 <%= user.name %></span>
@@ -32,6 +33,18 @@
         <button class="menu-btn" onclick="toggleMenu()">☰</button>
     </div>
 </header>
+
+<% if (user.role === 'worker' && user.kycStatus !== 'approved') { %>
+  <div style="background:#fff3cd;color:#856404;padding:14px 20px;text-align:center;font-size:14px;">
+    <% if (user.kycStatus === 'pending') { %>
+      ⏳ Aapki KYC verification pending hai. Approve hote hi aap customers ko dikhne lagenge.
+    <% } else if (user.kycStatus === 'rejected') { %>
+      ❌ Aapki KYC reject ho gayi thi. <a href="/kyc" style="color:#856404;font-weight:700;">Dobara submit karein</a>
+    <% } else { %>
+      📋 Aapko customers ke liye visible hone ke liye KYC complete karni hogi. <a href="/kyc" style="color:#856404;font-weight:700;">Complete KYC now</a>
+    <% } %>
+  </div>
+<% } %>
 
 <section id="home" class="hero">
     <div class="hero-content">

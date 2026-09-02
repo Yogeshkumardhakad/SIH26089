@@ -41,6 +41,12 @@ app.use('/', paymentRoutes);
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 app.use('/', subscriptionRoutes);
 
+const kycRoutes = require('./routes/kycRoutes');
+app.use('/', kycRoutes);
+
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/', adminRoutes);
+
 // Test route
 app.get('/', (req, res) => {
   res.render('home')

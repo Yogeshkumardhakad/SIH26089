@@ -10,6 +10,29 @@ exports.isAuthenticated = (req, res, next) => {
   }
 };
 
+// Worker ke liye: KYC approved hone tak dashboard/booking-related pages block karo
+exports.requireApprovedKyc = async (req, res, next) => {
+  if (!req.session.userId) {
+    return res.redirect('/signin');
+  }
+
+  const User = require('../models/User');
+  const user = await User.findById(req.session.userId);
+
+  // Customer ke liye ye check lagu nahi hota
+  if (user.role === 'customer') {
+    return next();
+  }
+
+  // Worker hai — KYC status check karo
+  if (user.kycStatus === 'approved') {
+    return next();
+  }
+
+  // Approved nahi hai — KYC page pe bhej do
+  return res.redirect('/kyc');
+};
+
 // GET Signup page
 exports.getSignup = (req, res) => {
   res.render('signup', { error: null });

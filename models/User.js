@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     enum: ['electrician', 'plumber', 'carpenter', 'cleaner', 'painter', 'gardener'],
     required: function () { return this.role === 'worker'; }
   },
+  kycStatus: {
+  type: String,
+  enum: ['not_submitted', 'pending', 'approved', 'rejected'],
+  default: 'not_submitted'
+},
   experience: {
     type: Number,
     required: function () { return this.role === 'worker'; }

@@ -36,15 +36,18 @@ exports.getWorkersBySkill = async (req, res) => {
       workers = await User.find({ role: 'worker', skill: skill }).lean();
     }
 
-    // Sirf active-subscription wale workers rakho
-    const filteredWorkers = [];
-    for (let w of workers) {
-      const sub = await Subscription.findOne({ worker: w._id }).sort({ endDate: -1 });
-      if (sub && new Date(sub.endDate) > new Date()) {
-        filteredWorkers.push(w);
-      }
-    }
-    workers = filteredWorkers;
+    // Sirf active-subscription AND KYC-approved workers rakho
+     const filteredWorkers = [];
+     for (let w of workers) {
+     const sub = await Subscription.findOne({ worker: w._id }).sort({ endDate: -1 });
+     const hasActiveSub = sub && new Date(sub.endDate) > new Date();
+     const isKycApproved = w.kycStatus === 'approved';
+
+  if (hasActiveSub && isKycApproved) {
+    filteredWorkers.push(w);
+  }
+}
+workers = filteredWorkers;
 
     // Har worker ki average rating nikal lo
     for (let w of workers) {
