@@ -19,6 +19,7 @@
                 <a href="/my-bookings" class="btn secondary-btn">My Bookings</a>
             <% } else if (user.role === 'worker') { %>
                 <a href="/worker-requests" class="btn secondary-btn">Requests</a>
+                <a href="/subscription" class="btn secondary-btn">Subscription</a>
             <% } %>
 
             <div class="user-info">
@@ -72,11 +73,11 @@
 
         <div class="search-form">
             <div class="input-box">
-    <label>Location</label>
-    <input id="searchLocationDisplay" type="text" placeholder="Tap to set on map" readonly style="background:#f9f9f9;cursor:pointer;" onclick="openMapModal('search')">
-    <input type="hidden" id="searchLatInput">
-    <input type="hidden" id="searchLngInput">
-</div>
+                <label>Location</label>
+                <input id="searchLocationDisplay" type="text" placeholder="Tap to set on map" readonly style="background:#f9f9f9;cursor:pointer;" onclick="openMapModal('search')">
+                <input type="hidden" id="searchLatInput">
+                <input type="hidden" id="searchLngInput">
+            </div>
             <div class="input-box">
                 <label>Service</label>
                 <select id="service">

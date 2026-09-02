@@ -30,21 +30,21 @@ exports.postSignup = async (req, res) => {
     const userData = { name, email, phone, role, password: hashedPassword };
 
     if (role === 'worker') {
-  userData.skill = skill;
-  userData.experience = experience;
-  userData.hourlyRate = hourlyRate;
-  userData.bio = bio;
+      userData.skill = skill;
+      userData.experience = experience;
+      userData.hourlyRate = hourlyRate;
+      userData.bio = bio;
 
-  userData.location = {
-    type: 'Point',
-    coordinates: [parseFloat(longitude) || 0, parseFloat(latitude) || 0],
-    address: address
-  };
+      userData.location = {
+        type: 'Point',
+        coordinates: [parseFloat(longitude) || 0, parseFloat(latitude) || 0],
+        address: address
+      };
 
-  if (req.file) {
-    userData.photo = req.file.path;
-  }
-}
+      if (req.file) {
+        userData.photo = req.file.path;
+      }
+    }
 
     await User.create(userData);
 
@@ -93,13 +93,6 @@ exports.getDashboard = async (req, res) => {
   res.render('dashboard', { user });
 };
 
-// Logout
-exports.logout = (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/signin');
-  });
-};
-
 // GET Profile page
 exports.getProfile = async (req, res) => {
   try {
@@ -120,30 +113,27 @@ exports.updateProfile = async (req, res) => {
     user.name = name;
     user.phone = phone;
 
-    // Sirf worker hai to hi ye fields update karo
-   if (user.role === 'worker') {
-  user.skill = skill;
-  user.experience = experience;
-  user.hourlyRate = hourlyRate;
-  user.bio = bio;
+    if (user.role === 'worker') {
+      user.skill = skill;
+      user.experience = experience;
+      user.hourlyRate = hourlyRate;
+      user.bio = bio;
 
-  if (latitude && longitude) {
-    user.location = {
-      type: 'Point',
-      coordinates: [parseFloat(longitude), parseFloat(latitude)],
-      address: address
-    };
-  }
-}
+      if (latitude && longitude) {
+        user.location = {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)],
+          address: address
+        };
+      }
+    }
 
-    // Agar nayi photo upload hui hai
     if (req.file) {
-  userData.photo = req.file.path;
-}
+      user.photo = req.file.path;
+    }
 
     await user.save();
 
-    // Session mein naam bhi update kar do (navbar ke liye)
     req.session.userName = user.name;
 
     res.render('profile', { user, error: null, success: 'Profile update ho gaya!' });
@@ -153,4 +143,11 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.session.userId);
     res.render('profile', { user, error: 'Kuch error aa gaya', success: null });
   }
+};
+
+// Logout
+exports.logout = (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/signin');
+  });
 };

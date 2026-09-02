@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Subscription = require('../models/Subscription');
 
 exports.getWorkersBySkill = async (req, res) => {
   try {
@@ -34,6 +35,16 @@ exports.getWorkersBySkill = async (req, res) => {
     } else {
       workers = await User.find({ role: 'worker', skill: skill }).lean();
     }
+
+    // Sirf active-subscription wale workers rakho
+    const filteredWorkers = [];
+    for (let w of workers) {
+      const sub = await Subscription.findOne({ worker: w._id }).sort({ endDate: -1 });
+      if (sub && new Date(sub.endDate) > new Date()) {
+        filteredWorkers.push(w);
+      }
+    }
+    workers = filteredWorkers;
 
     // Har worker ki average rating nikal lo
     for (let w of workers) {
